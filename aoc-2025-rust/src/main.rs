@@ -2,9 +2,9 @@
 
 mod solutions;
 
-use crate::solutions::day_1::part_1;
+use crate::solutions::day_1::{part_1, part_2};
 
 fn main() {
     println!("{}", part_1());
-    // part_2();
+    println!("{}", part_2());
 }
