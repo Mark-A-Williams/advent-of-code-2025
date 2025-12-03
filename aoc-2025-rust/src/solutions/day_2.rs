@@ -4,13 +4,14 @@ pub fn part_1() -> i64 {
     let lines = get_lines_from_file("../inputs/2.txt");
     let ranges = parse_all_id_ranges(&lines.first().unwrap());
 
+    for range in &ranges {
+        println!("Range {0}", range.max - range.min)
+    }
+
     return ranges
         .iter()
         .map(|o| o.get_sum_of_invalid_ids_in_range())
         .sum();
-    // for range in ranges {
-    //     println!("Min {0}", range.min)
-    // }
 
     // return 0;
 }
@@ -39,6 +40,20 @@ struct IdRange {
 
 impl IdRange {
     pub fn get_sum_of_invalid_ids_in_range(&self) -> i64 {
-        return 0;
+        let mut sum: i64 = 0;
+        for id in self.min..self.max + 1 {
+            let string = id.to_string();
+            if string.len() % 2 != 0 {
+                continue;
+            }
+
+            let split = string.split_at(string.len() / 2);
+            if split.0 == split.1 {
+                // println!("{id}");
+                sum += id;
+            }
+        }
+
+        return sum;
     }
 }
