@@ -78,6 +78,11 @@ impl IdRange {
 
 fn string_is_any_number_of_repeats_of_substring(string: &str) -> bool {
     let len = string.len();
+
+    if len == 1 {
+        return false;
+    }
+
     let factors = get_factors(len as i32);
 
     for factor in factors {
