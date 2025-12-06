@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::solutions::file_helpers::get_lines_from_file;
 
 pub fn part_1() -> i64 {
@@ -15,10 +13,6 @@ pub fn part_1() -> i64 {
 pub fn part_2() -> i64 {
     let lines = get_lines_from_file("../inputs/2.txt");
     let ranges = parse_all_id_ranges(&lines.first().unwrap());
-
-    // for range in &ranges {
-    //     println!("Range {0}", range.max - range.min)
-    // }
 
     return ranges
         .iter()
@@ -55,7 +49,6 @@ impl IdRange {
 
             let split = string.split_at(string.len() / 2);
             if split.0 == split.1 {
-                // println!("{id}");
                 sum += id;
             }
         }
@@ -87,17 +80,9 @@ fn string_is_any_number_of_repeats_of_substring(string: &str) -> bool {
 
     for factor in factors {
         let split = string.split_at(factor as usize).0;
-        // println!(
-        //     "Checking parent string '{0}' against substring '{1}' {2} times",
-        //     string, split, factor
-        // );
 
         let num_repeats = len as i32 / factor;
         if string_is_n_repeats_of_substring(string, split, num_repeats) {
-            println!(
-                "Match! '{0}' is {1} repeats of '{2}'",
-                string, num_repeats, split
-            );
             return true;
         }
     }
@@ -111,7 +96,6 @@ fn string_is_n_repeats_of_substring(string: &str, substring: &str, n: i32) -> bo
         return true;
     }
 
-    // println!("Strings not equal: {0}, {1}", repeated, string);
     return false;
 }
 
