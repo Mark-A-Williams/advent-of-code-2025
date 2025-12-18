@@ -1,14 +1,70 @@
 use crate::solutions::file_helpers::get_lines_from_file;
 
 pub fn part_1() -> u64 {
-    parse_input().iter().map(|p| p.get_result()).sum()
+    parse_input_normal_reading()
+        .iter()
+        .map(|p| p.get_result())
+        .sum()
 }
 
 pub fn part_2() -> u64 {
-    0
+    parse_input_columnwise()
+        .iter()
+        .map(|p| p.get_result())
+        .sum()
 }
 
-fn parse_input() -> Vec<Problem> {
+fn parse_input_columnwise() -> Vec<Problem> {
+    let lines = get_lines_from_file("../inputs/6.txt");
+
+    let line_length = lines.first().unwrap().len();
+
+    let mut input_values_buffer: Vec<u64> = vec![];
+    let mut current_command: Option<char> = None;
+    let mut current_column_index = 0;
+    let mut results: Vec<Problem> = vec![];
+
+    while current_column_index < line_length {
+        let chars_from_all_lines = lines
+            .iter()
+            .map(|l| l.chars().nth(current_column_index).unwrap());
+
+        if chars_from_all_lines
+            .clone()
+            .all(|c| c.is_ascii_whitespace())
+        {
+            results.push(Problem {
+                inputs: input_values_buffer.clone(),
+                command: current_command.unwrap(),
+            });
+
+            input_values_buffer.clear();
+            current_command = None;
+
+            current_column_index += 1;
+            continue;
+        }
+
+        let numeric_string: String = chars_from_all_lines
+            .clone()
+            .filter(|c| c.is_digit(10))
+            .collect();
+
+        input_values_buffer.push(numeric_string.parse::<u64>().unwrap());
+
+        let lowest_char = chars_from_all_lines.last().unwrap();
+
+        if lowest_char.is_ascii_punctuation() {
+            current_command = Some(lowest_char)
+        }
+
+        current_column_index += 1
+    }
+
+    results
+}
+
+fn parse_input_normal_reading() -> Vec<Problem> {
     let lines = get_lines_from_file("../inputs/6.txt");
 
     let mut result: Vec<Problem> = vec![];
