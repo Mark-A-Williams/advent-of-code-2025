@@ -12,31 +12,7 @@ pub fn part_1() -> usize {
         .collect();
 
     for connection in connections.iter().take(1000) {
-        let existing_first_box_circuit = circuits
-            .iter()
-            .enumerate()
-            .find(|set| set.1.contains(&connection.id1))
-            .unwrap();
-
-        if existing_first_box_circuit.1.contains(&connection.id2) {
-            continue;
-        }
-
-        let mut new_circuit = existing_first_box_circuit.1.clone();
-
-        circuits.remove(existing_first_box_circuit.0);
-
-        let existing_second_box_circuit = circuits
-            .iter()
-            .enumerate()
-            .find(|set| set.1.contains(&connection.id2))
-            .unwrap();
-
-        new_circuit.extend(existing_second_box_circuit.1);
-
-        circuits.remove(existing_second_box_circuit.0);
-
-        circuits.push(new_circuit);
+        apply_connection(connection, &mut circuits);
     }
 
     circuits.sort_by(|a, b| b.len().cmp(&a.len()));
@@ -44,8 +20,64 @@ pub fn part_1() -> usize {
 }
 
 pub fn part_2() -> u64 {
-    let lines = get_lines_from_file("../inputs/8.example.txt");
-    0
+    let junction_boxes = parse_input();
+    let connections = get_all_connections_by_distance(&junction_boxes);
+
+    let mut circuits: Vec<HashSet<u16>> = junction_boxes
+        .iter()
+        .map(|j_box| HashSet::from([j_box.id]))
+        .collect();
+
+    for connection in connections.iter() {
+        apply_connection(connection, &mut circuits);
+
+        if circuits.len() == 1 {
+            // We are done
+            let first_x = junction_boxes
+                .iter()
+                .find(|b| b.id == connection.id1)
+                .unwrap()
+                .x as u64;
+
+            let second_x = junction_boxes
+                .iter()
+                .find(|b| b.id == connection.id2)
+                .unwrap()
+                .x as u64;
+
+            return first_x * second_x;
+        }
+    }
+
+    panic!();
+}
+
+fn apply_connection(connection: &JunctionBoxConnection, circuits: &mut Vec<HashSet<u16>>) {
+    let existing_first_box_circuit = circuits
+        .iter()
+        .enumerate()
+        .find(|set| set.1.contains(&connection.id1))
+        .unwrap();
+
+    if existing_first_box_circuit.1.contains(&connection.id2) {
+        return;
+    }
+
+    let mut new_circuit = existing_first_box_circuit.1.clone();
+
+    circuits.remove(existing_first_box_circuit.0);
+
+    let existing_second_box_circuit = circuits
+        .iter()
+        .enumerate()
+        .find(|set| set.1.contains(&connection.id2))
+        .unwrap();
+
+    new_circuit.extend(existing_second_box_circuit.1);
+
+    circuits.remove(existing_second_box_circuit.0);
+
+    circuits.push(new_circuit);
 }
 
 fn parse_input() -> Vec<JunctionBox> {
