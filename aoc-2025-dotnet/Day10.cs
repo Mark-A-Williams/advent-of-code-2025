@@ -1,6 +1,71 @@
-var lines = File.ReadAllLines("../inputs/10.example.txt");
+using System.Diagnostics;
+
+Stopwatch stopwatch = new();
+stopwatch.Start();
+
+var lines = File.ReadAllLines("../inputs/10.txt");
 var machines = lines.Select(Machine.Parse).ToList();
-foreach (var machine in machines) Console.WriteLine(machine);
+
+var result = 0;
+
+foreach (var machine in machines)
+{
+    Console.WriteLine(machine);
+    var fewestRequiredPresses = FindFewestButtonPressesToLightMachineCorrectly(machine);
+    Console.WriteLine(fewestRequiredPresses);
+    result += fewestRequiredPresses;
+}
+
+stopwatch.Stop();
+
+Console.WriteLine($"Result: {result}");
+Console.WriteLine($"Elapsed time: {stopwatch.ElapsedMilliseconds}ms");
+
+int FindFewestButtonPressesToLightMachineCorrectly(Machine machine, int startingState = 0)
+{
+    if (machine.IntendedFinalState.RawValue == 0) return 0; // Trivial case
+
+    // Second trivial case - one button will turn on exactly the desired lights
+    if (machine.ButtonWiringSchematics.Any(o => o == machine.IntendedFinalState)) return 1;
+
+    var sublists = SubSetsOf(machine.ButtonWiringSchematics);
+
+    for (int n = 2; n <= machine.NumberOfButtons; n++)
+    {
+        var buttonCombinations = sublists.Where(o => o.Count() == n);
+
+        if (buttonCombinations.Any(o => ButtonsResultInIntendedFinalState(o, machine.IntendedFinalState)))
+        {
+            return n;
+        }
+    }
+
+    throw new InvalidOperationException("Unsolvable machine");
+}
+
+bool ButtonsResultInIntendedFinalState(IEnumerable<LightingBitMask> buttons, LightingBitMask intendedFinalState)
+{
+    var result = 0;
+    foreach (var button in buttons)
+    {
+        result ^= button.RawValue;
+    }
+    return result == intendedFinalState.RawValue;
+}
+
+// https://stackoverflow.com/a/999182
+static IEnumerable<IEnumerable<T>> SubSetsOf<T>(IEnumerable<T> source)
+{
+    if (!source.Any())
+        return Enumerable.Repeat(Enumerable.Empty<T>(), 1);
+
+    var element = source.Take(1);
+
+    var haveNots = SubSetsOf(source.Skip(1));
+    var haves = haveNots.Select(set => element.Concat(set));
+
+    return haves.Concat(haveNots);
+}
 
 /// <summary>
 /// Corresponds to one row of the input - a machine with an intended final state and the info of the buttons to get us there.
@@ -8,7 +73,7 @@ foreach (var machine in machines) Console.WriteLine(machine);
 /// <param name="Size"></param>
 /// <param name="IntendedFinalState"></param>
 /// <param name="ButtonWiringSchematics">A list of buttons representing where the Bitmask indicates which lights the button toggles.</param>
-struct Machine(
+public record struct Machine(
     LightingBitMask IntendedFinalState,
     List<LightingBitMask> ButtonWiringSchematics)
 {
@@ -28,13 +93,15 @@ struct Machine(
     {
         return $"{IntendedFinalState} ... {string.Join(',', ButtonWiringSchematics)}";
     }
+
+    public int NumberOfButtons => ButtonWiringSchematics.Count;
 }
 
 // This is essentially a wrapper around a binary number where
 // e.g. 17 corresponds to #...# (on, off, off, off, on = 2^4 + 2^1 = 17)
 // I anticipate this being much more efficient than storing a list of ints, and will
 // probably end up adding various helper functions to this.
-struct LightingBitMask(int RawValue)
+public record struct LightingBitMask(int RawValue)
 {
     /// <summary>
     /// Parses a final state string like '#.#.' (to the number 5 in this example, 2^0 + 2^2, kinda backwards).
